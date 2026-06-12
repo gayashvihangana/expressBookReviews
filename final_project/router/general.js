@@ -22,12 +22,26 @@ public_users.post("/register", (req, res) => {
   return res.status(200).json({ message: "User successfully registered. Now you can login" });
 });
 
-// Get the book list available in the shop
-public_users.get('/', function (req, res) {
-  return res.status(200).json(books);
+// Get the book list available in the shop using async/await
+public_users.get('/', async function (req, res) {
+  try {
+    const getAllBooks = () => {
+      return new Promise((resolve, reject) => {
+        if (books) {
+          resolve(books);
+        } else {
+          reject("Unable to retrieve books");
+        }
+      });
+    };
+    const allBooks = await getAllBooks();
+    return res.status(200).json(allBooks);
+  } catch (error) {
+    return res.status(500).json({ message: error });
+  }
 });
 
-// Get book details based on ISBN using Axios and async/await
+// Get book details based on ISBN using Axios with async/await
 public_users.get('/isbn/:isbn', async function (req, res) {
   try {
     const isbn = req.params.isbn;
@@ -43,14 +57,13 @@ public_users.get('/isbn/:isbn', async function (req, res) {
 
   } catch (error) {
     return res.status(500).json({
-      message: "Error retrieving book",
+      message: "Error retrieving book details",
       error: error.message
     });
   }
 });
 
-
-// Get book details based on author using Axios and Promises
+// Get book details based on author using Axios with Promise callbacks
 public_users.get('/author/:author', function (req, res) {
   const author = req.params.author;
 
@@ -66,21 +79,20 @@ public_users.get('/author/:author', function (req, res) {
         }));
 
       if (filteredBooks.length === 0) {
-        return res.status(404).json({ message: "Author not found" });
+        return res.status(404).json({ message: "No books found for this author" });
       }
 
       return res.status(200).json(filteredBooks);
     })
     .catch((error) => {
       return res.status(500).json({
-        message: "Error retrieving books",
+        message: "Error retrieving books by author",
         error: error.message
       });
     });
 });
 
-
-// Get all books based on title using Axios and async/await
+// Get book details based on title using Axios with async/await
 public_users.get('/title/:title', async function (req, res) {
   try {
     const title = req.params.title;
@@ -96,14 +108,14 @@ public_users.get('/title/:title', async function (req, res) {
       }));
 
     if (filteredBooks.length === 0) {
-      return res.status(404).json({ message: "Title not found" });
+      return res.status(404).json({ message: "No books found with this title" });
     }
 
     return res.status(200).json(filteredBooks);
 
   } catch (error) {
     return res.status(500).json({
-      message: "Error retrieving books",
+      message: "Error retrieving books by title",
       error: error.message
     });
   }
